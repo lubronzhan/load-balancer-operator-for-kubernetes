@@ -84,7 +84,9 @@ func (r *ClusterReconciler) akoAddonSecretName(cluster *clusterv1.Cluster) strin
 }
 
 func (r *ClusterReconciler) createAKOAddonSecret(cluster *clusterv1.Cluster, obj *akoov1alpha1.AKODeploymentConfig, aviUsersecret *corev1.Secret) (*corev1.Secret, error) {
-	secretStringData, err := AkoAddonSecretDataYaml(cluster, obj, aviUsersecret)
+	_, isManagementCluster := cluster.Labels[akoov1alpha1.TKGManagementClusterLabel]
+
+	secretStringData, err := AkoAddonSecretDataYaml(cluster, obj, aviUsersecret, isManagementCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +111,8 @@ func (r *ClusterReconciler) createAKOAddonSecret(cluster *clusterv1.Cluster, obj
 	return secret, nil
 }
 
-func AkoAddonSecretDataYaml(cluster *clusterv1.Cluster, obj *akoov1alpha1.AKODeploymentConfig, aviUsersecret *corev1.Secret) (string, error) {
-	secret, err := ako.NewValues(obj, cluster.Namespace+"-"+cluster.Name)
+func AkoAddonSecretDataYaml(cluster *clusterv1.Cluster, obj *akoov1alpha1.AKODeploymentConfig, aviUsersecret *corev1.Secret, isManagementCluster bool) (string, error) {
+	secret, err := ako.NewValues(obj, cluster.Namespace+"-"+cluster.Name, isManagementCluster)
 	if err != nil {
 		return "", err
 	}

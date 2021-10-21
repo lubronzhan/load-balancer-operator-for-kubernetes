@@ -25,7 +25,7 @@ type Values struct {
 
 // NewValues creates a new Values
 // given AKODeploymentConfig and clusterNameSpacedName
-func NewValues(obj *akoov1alpha1.AKODeploymentConfig, clusterNameSpacedName string) (*Values, error) {
+func NewValues(obj *akoov1alpha1.AKODeploymentConfig, clusterNameSpacedName string, isManagementCluster bool) (*Values, error) {
 	if obj == nil {
 		return nil, errors.New("provided AKODeploymentConfig is nil")
 	}
@@ -47,8 +47,9 @@ func NewValues(obj *akoov1alpha1.AKODeploymentConfig, clusterNameSpacedName stri
 
 	return &Values{
 		LoadBalancerAndIngressService: LoadBalancerAndIngressService{
-			Name:      "ako-" + clusterNameSpacedName,
-			Namespace: akoov1alpha1.AviNamespace,
+			Name:                "ako-" + clusterNameSpacedName,
+			Namespace:           akoov1alpha1.AviNamespace,
+			IsManagementCluster: isManagementCluster,
 			Config: Config{
 				IsClusterService:      "",
 				ReplicaCount:          1,
@@ -91,9 +92,10 @@ func (v *Values) YttYaml() (string, error) {
 
 // LoadBalancerAndIngressService describes the load balancer and ingress service
 type LoadBalancerAndIngressService struct {
-	Name      string `yaml:"name"`
-	Namespace string `yaml:"namespace"`
-	Config    Config `yaml:"config"`
+	Name                string `yaml:"name"`
+	Namespace           string `yaml:"namespace"`
+	IsManagementCluster bool   `yaml:"is_management_cluster"`
+	Config              Config `yaml:"config"`
 }
 
 // Config consists of different configurations for Values that includes settings of

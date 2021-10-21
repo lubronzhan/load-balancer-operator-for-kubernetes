@@ -20,7 +20,8 @@ const expectedSecretYaml = `#@data/values
 ---
 loadBalancerAndIngressService:
     name: ako--test-cluster
-    namespace: avi-system
+    namespace: tkg-system-networking
+    is_management_cluster: false
     config:
         is_cluster_service: ""
         replica_count: 1
@@ -156,31 +157,31 @@ func unitTestAKODeploymentYaml() {
 			})
 
 			It("should populate correct values in crs yaml", func() {
-				_, err := cluster.AkoAddonSecretDataYaml(capicluster, akoDeploymentConfig, aviUserSecret)
+				_, err := cluster.AkoAddonSecretDataYaml(capicluster, akoDeploymentConfig, aviUserSecret, false)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 
 			It("should generate the exact AddonSecretData values", func() {
-				secret, err := ako.NewValues(akoDeploymentConfig, "namespace-name")
+				secret, err := ako.NewValues(akoDeploymentConfig, "namespace-name", false)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(secret.LoadBalancerAndIngressService.Name).Should(Equal("ako-namespace-name"))
 			})
 
 			It("should generates exact values in crs yaml with the string template approach", func() {
-				secretYaml, err := cluster.AkoAddonSecretDataYaml(capicluster, akoDeploymentConfig, aviUserSecret)
+				secretYaml, err := cluster.AkoAddonSecretDataYaml(capicluster, akoDeploymentConfig, aviUserSecret, false)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(secretYaml).Should(Equal(expectedSecretYaml))
 			})
 
 			It("should throw error if template not match", func() {
 				akoDeploymentConfig.Spec.DataNetwork.CIDR = "test"
-				_, err := cluster.AkoAddonSecretDataYaml(capicluster, akoDeploymentConfig, aviUserSecret)
+				_, err := cluster.AkoAddonSecretDataYaml(capicluster, akoDeploymentConfig, aviUserSecret, false)
 				Expect(err).Should(HaveOccurred())
 				akoDeploymentConfig.Spec.DataNetwork.CIDR = "10.0.0.0/24"
 			})
 
 			It("should update delete_config in this way", func() {
-				values, err := ako.NewValues(akoDeploymentConfig, "namespace-name")
+				values, err := ako.NewValues(akoDeploymentConfig, "namespace-name", false)
 				Expect(err).ShouldNot(HaveOccurred())
 				values.LoadBalancerAndIngressService.Config.AKOSettings.DeleteConfig = "true"
 				secretData, err := values.YttYaml()

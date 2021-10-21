@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	TKGSystemNamespace       = "tkg-system"
-	TKGClusterNameLabel      = "tkg.tanzu.vmware.com/cluster-name"
-	TKGClusterNameSpaceLabel = "tkg.tanzu.vmware.com/cluster-namespace"
+	TKGSystemNamespace        = "tkg-system"
+	TKGClusterNameLabel       = "tkg.tanzu.vmware.com/cluster-name"
+	TKGClusterNameSpaceLabel  = "tkg.tanzu.vmware.com/cluster-namespace"
+	TKGManagementClusterLabel = "cluster-role.tkg.tanzu.vmware.com/management"
 
 	TKGAddonAnnotationKey       = "tkg.tanzu.vmware.com/addon-type"
 	TKGAddOnLabelAddonNameKey   = "tkg.tanzu.vmware.com/addon-name"
@@ -33,7 +34,7 @@ const (
 	AviClusterLabel                                              = "networking.tkg.tanzu.vmware.com/avi"
 	AviClusterSelectedLabel                                      = "networking.tkg.tanzu.vmware.com/avi-skip-default-adc"
 	AviClusterSecretType                                         = "avi.cluster.x-k8s.io/secret"
-	AviNamespace                                                 = "avi-system"
+	AviNamespace                                                 = "tkg-system-networking"
 	AviCertificateKey                                            = "certificateAuthorityData"
 	AviResourceCleanupReason                                     = "AviResourceCleanup"
 	AviResourceCleanupSucceededCondition clusterv1.ConditionType = "AviResourceCleanupSucceeded"
