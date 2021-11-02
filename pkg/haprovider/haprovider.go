@@ -132,13 +132,13 @@ func (r *HAProvider) getServiceAnnotation(ctx context.Context, cluster *clusterv
 	aviInfraSetting := &akov1alpha1.AviInfraSetting{}
 
 	// TODO: check a cluster should be managed by only one adc
-	adcForCluster, err := handlers.GetADCForCluster(ctx, cluster, r.log, r.Client)
+	adcForCluster, err := handlers.ListADCsForCluster(ctx, cluster, r.log, r.Client)
 	if err != nil {
 		return serviceAnnotation
 	}
 
 	if len(adcForCluster) == 0 {
-		r.log.Error(err, "Failed to get akoDeploymentConfig for current cluster")
+		r.log.Info("Current cluster is not selected by any akoDeploymentConfig, skip adding AviInfraSetting annotation")
 		return serviceAnnotation
 	}
 
@@ -298,5 +298,5 @@ func (r *HAProvider) ensureEndpoints(ctx context.Context, serviceName, serviceNa
 }
 
 func GetAviInfraSettingName(adc *akoov1alpha1.AKODeploymentConfig) string {
-	return adc.Name + "-ha"
+	return adc.Name + "-ais"
 }
