@@ -294,11 +294,12 @@ func (r *AKODeploymentConfigReconciler) reconcileAviInfraSetting(
 		log.Error(err, "Failed to get AVIInfraSetting, requeue")
 		return res, err
 	}
-	aviInfraSetting = newAviInfraSetting.DeepCopy()
+	newAviInfraSetting.Spec.DeepCopyInto(&aviInfraSetting.Spec)
 	return res, r.Update(ctx, aviInfraSetting)
 }
 
 func (r *AKODeploymentConfigReconciler) createAviInfraSetting(adc *akoov1alpha1.AKODeploymentConfig) *akov1alpha1.AviInfraSetting {
+	// ShardVSSize describes ingress shared virtual service size, default value is SMALL
 	shardSize := "SMALL"
 	if adc.Spec.ExtraConfigs.IngressConfigs.ShardVSSize != "" {
 		shardSize = adc.Spec.ExtraConfigs.IngressConfigs.ShardVSSize
@@ -318,7 +319,6 @@ func (r *AKODeploymentConfigReconciler) createAviInfraSetting(adc *akoov1alpha1.
 					Cidr:        adc.Spec.ControlPlaneNetwork.CIDR,
 				}},
 			},
-			// TODO: expose ShardSize in akoDeploymentConfig
 			L7Settings: akov1alpha1.AviInfraL7Settings{
 				ShardSize: shardSize,
 			},
