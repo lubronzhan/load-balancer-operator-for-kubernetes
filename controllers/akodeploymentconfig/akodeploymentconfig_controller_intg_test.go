@@ -4,6 +4,7 @@
 package akodeploymentconfig_test
 
 import (
+	"fmt"
 	"github.com/avinetworks/sdk/go/models"
 	"github.com/avinetworks/sdk/go/session"
 	. "github.com/onsi/ginkgo"
@@ -11,7 +12,9 @@ import (
 	"github.com/pkg/errors"
 	akoov1alpha1 "github.com/vmware-samples/load-balancer-operator-for-kubernetes/api/v1alpha1"
 	controllerruntime "github.com/vmware-samples/load-balancer-operator-for-kubernetes/pkg/controller-runtime"
+	"github.com/vmware-samples/load-balancer-operator-for-kubernetes/pkg/haprovider"
 	"github.com/vmware-samples/load-balancer-operator-for-kubernetes/pkg/test/builder"
+	akov1alpha1 "github.com/vmware/load-balancer-and-ingress-services-for-kubernetes/pkg/apis/ako/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/cluster-api/util/conditions"
@@ -349,6 +352,13 @@ func intgTestAkoDeploymentConfigController() {
 			When("akoDeploymentConfig and cluster are created", func() {
 				// Reconcile -> reconcileNormal
 				When("AKODeploymentConfig is not being deleted", func() {
+					// Reconcile -> reconcileNormal -> r.reconcileAviInfraSetting
+					It("should create AviInfraSetting", func() {
+						ensureRuntimeObjectMatchExpectation(client.ObjectKey{
+							Name: haprovider.GetAviInfraSettingName(akoDeploymentConfig),
+						}, &akov1alpha1.AviInfraSetting{}, true)
+					})
+
 					// Reconcile -> reconcileNormal -> r.reconcileNetworkSubnets
 					When("subnet exists and AKODeploymentConfig's subnet is contained", func() {
 						BeforeEach(func() {
@@ -529,12 +539,12 @@ func intgTestAkoDeploymentConfigController() {
 
 				// Reconcile -> reconcileDelete
 				When("AKODeploymentConfig is being deleted", func() {
-					BeforeEach(func() {
-						deleteObjects(akoDeploymentConfig)
-						ensureRuntimeObjectMatchExpectation(client.ObjectKey{
-							Name: akoDeploymentConfig.Name,
-						}, &akoov1alpha1.AKODeploymentConfig{}, false)
-					})
+					//BeforeEach(func() {
+					//	deleteObjects(akoDeploymentConfig)
+					//	ensureRuntimeObjectMatchExpectation(client.ObjectKey{
+					//		Name: akoDeploymentConfig.Name,
+					//	}, &akoov1alpha1.AKODeploymentConfig{}, false)
+					//})
 
 					// Reconcile -> reconcileDelete -> phases.ReconcilePhases(normal)
 					When("the cluster is not deleted ", func() {
@@ -559,16 +569,23 @@ func intgTestAkoDeploymentConfigController() {
 								Namespace: cluster.Namespace,
 							}, &corev1.Secret{}, false)
 						})
+
+						// Reconcile -> reconcileDelete -> r.reconcileAviInfraSettingDelete
+						It("should not delete AviInfraSetting", func() {
+							ensureRuntimeObjectMatchExpectation(client.ObjectKey{
+								Name: haprovider.GetAviInfraSettingName(akoDeploymentConfig),
+							}, &akov1alpha1.AviInfraSetting{}, true)
+						})
 					})
 
 					When("the cluster is being deleted ", func() {
-						BeforeEach(func() {
-							deleteObjects(cluster)
-							ensureRuntimeObjectMatchExpectation(client.ObjectKey{
-								Name:      cluster.Name,
-								Namespace: cluster.Namespace,
-							}, &clusterv1.Cluster{}, false)
-						})
+						//BeforeEach(func() {
+						//	deleteObjects(cluster)
+						//	ensureRuntimeObjectMatchExpectation(client.ObjectKey{
+						//		Name:      cluster.Name,
+						//		Namespace: cluster.Namespace,
+						//	}, &clusterv1.Cluster{}, false)
+						//})
 
 						//Reconcile -> reconcileDelete -> r.reconcileClustersDelete -> r.clusterReconciler.ReconcileAddonSecretDelete
 						It("should remove Cluster Add-on Secret", func() {
@@ -576,6 +593,30 @@ func intgTestAkoDeploymentConfigController() {
 								Name:      cluster.Name + "-load-balancer-and-ingress-service-addon",
 								Namespace: cluster.Namespace,
 							}, &corev1.Secret{}, false)
+						})
+
+						// Reconcile -> reconcileDelete -> r.reconcileAviInfraSettingDelete
+						FIt("should delete AviInfraSetting", func() {
+							deleteObjects(cluster)
+							ensureRuntimeObjectMatchExpectation(client.ObjectKey{
+								Name:      cluster.Name,
+								Namespace: cluster.Namespace,
+							}, &clusterv1.Cluster{}, false)
+
+							fmt.Println("!!!!!!! cluster finish !!!!!!!!!!!!!")
+
+							deleteObjects(akoDeploymentConfig)
+							ensureRuntimeObjectMatchExpectation(client.ObjectKey{
+								Name: akoDeploymentConfig.Name,
+							}, &akoov1alpha1.AKODeploymentConfig{}, false)
+
+							fmt.Println("!!!!!!! adc finish !!!!!!!!!!!!!")
+
+							ensureRuntimeObjectMatchExpectation(client.ObjectKey{
+								Name: haprovider.GetAviInfraSettingName(akoDeploymentConfig),
+							}, &akov1alpha1.AviInfraSetting{}, false)
+
+							fmt.Println("!!!!!!! ais finish !!!!!!!!!!!!!")
 						})
 					})
 				})
